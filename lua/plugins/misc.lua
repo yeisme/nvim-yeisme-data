@@ -23,6 +23,108 @@ return {
     end,
   },
 
+  -- LSP/工具链安装
+  {
+    "mason-org/mason.nvim",
+    opts = function(_, opts)
+      opts = opts or {}
+      opts.ensure_installed = opts.ensure_installed or {}
+      vim.list_extend(opts.ensure_installed, {
+        -- C/C++
+        "clangd",
+        "clang-format",
+        -- Go
+        "gopls",
+        "golangci-lint",
+        "gofumpt",
+        -- Python
+        "pyright",
+        "ruff",
+        "ruff-lsp",
+        -- Node/JS/TS
+        "typescript-language-server",
+        "eslint_d",
+        "prettier",
+        -- Rust
+        "rust-analyzer",
+        -- Common
+        "json-lsp",
+        "yaml-language-server",
+        "bash-language-server",
+      })
+      return opts
+    end,
+  },
+
+  {
+    "mason-org/mason-lspconfig.nvim",
+    opts = function(_, opts)
+      opts = opts or {}
+      opts.ensure_installed = opts.ensure_installed or {}
+      vim.list_extend(opts.ensure_installed, {
+        "clangd",
+        "gopls",
+        "pyright",
+        "ruff_lsp",
+        "tsserver",
+        "rust_analyzer",
+        "jsonls",
+        "yamlls",
+        "bashls",
+      })
+      return opts
+    end,
+  },
+
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      servers = {
+        clangd = {
+          cmd = { "clangd", "--header-insertion=never", "--offset-encoding=utf-16" },
+        },
+        gopls = {
+          settings = {
+            gopls = {
+              gofumpt = true,
+              usePlaceholders = true,
+              analyses = { unusedparams = true, fieldalignment = true },
+              staticcheck = true,
+            },
+          },
+        },
+        pyright = {
+          settings = {
+            python = {
+              analysis = {
+                typeCheckingMode = "basic",
+                autoImportCompletions = true,
+              },
+            },
+          },
+        },
+        ruff_lsp = {},
+        tsserver = {
+          settings = {
+            javascript = { inlayHints = { includeInlayParameterNameHints = "all" } },
+            typescript = { inlayHints = { includeInlayParameterNameHints = "all" } },
+          },
+        },
+        rust_analyzer = {
+          settings = {
+            ["rust-analyzer"] = {
+              checkOnSave = { command = "clippy" },
+              cargo = { allFeatures = true },
+            },
+          },
+        },
+        jsonls = {},
+        yamlls = {},
+        bashls = {},
+      },
+    },
+  },
+
   -- Git 细粒度标记与操作
   {
     "lewis6991/gitsigns.nvim",
@@ -128,6 +230,37 @@ return {
   },
 
   {
+    "sindrets/diffview.nvim",
+    cmd = { "DiffviewOpen", "DiffviewClose", "DiffviewFileHistory" },
+    keys = {
+      { "<leader>gO", "<cmd>DiffviewOpen<cr>", desc = "Diffview: 与 HEAD 比较" },
+      { "<leader>gh", "<cmd>DiffviewFileHistory %<cr>", desc = "Diffview: 当前文件历史" },
+      { "<leader>gH", "<cmd>DiffviewFileHistory<cr>", desc = "Diffview: 仓库历史" },
+      { "<leader>gX", "<cmd>DiffviewClose<cr>", desc = "Diffview: 关闭" },
+    },
+    opts = {
+      enhanced_diff_hl = true,
+      view = {
+        merge_tool = {
+          layout = "diff3_mixed",
+        },
+        default = {
+          layout = "diff2_horizontal",
+        },
+      },
+      file_panel = {
+        win_config = { width = 36 },
+      },
+      hooks = {
+        diff_buf_read = function(bufnr)
+          vim.opt_local.wrap = false
+          vim.opt_local.list = false
+        end,
+      },
+    },
+  },
+
+  {
     "petertriho/nvim-scrollbar",
     event = "VeryLazy",
     opts = {
@@ -203,6 +336,98 @@ return {
     end,
   },
 
+  -- DAP 调试体验
+  {
+    "mfussenegger/nvim-dap",
+    dependencies = {
+      "rcarriga/nvim-dap-ui",
+      "theHamsta/nvim-dap-virtual-text",
+      "jay-babu/mason-nvim-dap.nvim",
+      "nvim-neotest/nvim-nio",
+    },
+    keys = {
+      { "<F5>", function() require("dap").continue() end, desc = "DAP 继续/启动" },
+      { "<F6>", function() require("dap").terminate() end, desc = "DAP 结束调试" },
+      { "<F10>", function() require("dap").step_over() end, desc = "DAP Step Over" },
+      { "<F11>", function() require("dap").step_into() end, desc = "DAP Step Into" },
+      { "<F12>", function() require("dap").step_out() end, desc = "DAP Step Out" },
+      { "<leader>db", function() require("dap").toggle_breakpoint() end, desc = "DAP 切换断点" },
+      {
+        "<leader>dB",
+        function()
+          require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
+        end,
+        desc = "DAP 条件断点",
+      },
+      {
+        "<leader>dl",
+        function()
+          require("dap").set_breakpoint(nil, nil, vim.fn.input("Log point message: "))
+        end,
+        desc = "DAP 日志点",
+      },
+      { "<leader>dr", function() require("dap").restart() end, desc = "DAP 重启" },
+      { "<leader>de", function() require("dap").run_last() end, desc = "DAP 重跑上次配置" },
+      { "<leader>du", function() require("dapui").toggle() end, desc = "DAP UI 面板" },
+      { "<leader>dk", function() require("dap").up() end, desc = "DAP 栈上移" },
+      { "<leader>dj", function() require("dap").down() end, desc = "DAP 栈下移" },
+    },
+    config = function()
+      local dap = require("dap")
+      local dapui = require("dapui")
+
+      -- Mason 自动安装常用调试器
+      require("mason-nvim-dap").setup({
+        ensure_installed = { "python", "codelldb", "node2", "delve" },
+        automatic_installation = true,
+        handlers = {},
+      })
+
+      -- UI 布局与虚拟文本
+      require("nvim-dap-virtual-text").setup({
+        commented = true,
+        highlight_changed_variables = true,
+      })
+
+      dapui.setup({
+        icons = { expanded = "▾", collapsed = "▸", current_frame = "▸" },
+        layouts = {
+          {
+            elements = { "scopes", "breakpoints", "stacks", "watches" },
+            size = 40,
+            position = "left",
+          },
+          {
+            elements = { "repl", "console" },
+            size = 0.25,
+            position = "bottom",
+          },
+        },
+        floating = { border = "rounded", mappings = { close = { "q", "<Esc>" } } },
+      })
+
+      dap.listeners.after.event_initialized["dapui_config"] = function()
+        dapui.open()
+      end
+      dap.listeners.before.event_terminated["dapui_config"] = function()
+        dapui.close()
+      end
+      dap.listeners.before.event_exited["dapui_config"] = function()
+        dapui.close()
+      end
+
+      -- 更清晰的断点符号
+      local function sign(name, text, hl)
+        vim.fn.sign_define(name, { text = text, texthl = hl or name, numhl = "" })
+      end
+      sign("DapBreakpoint", "", "DiagnosticError")
+      sign("DapBreakpointCondition", "", "DiagnosticWarn")
+      sign("DapStopped", "", "DiagnosticInfo")
+      sign("DapLogPoint", "◆", "DiagnosticHint")
+      sign("DapBreakpointRejected", "", "DiagnosticError")
+    end,
+  },
+
   {
     "folke/todo-comments.nvim",
     event = "VeryLazy",
@@ -217,6 +442,65 @@ return {
         NOTE = { icon = "󰎞 ", color = "hint" },
       },
       highlight = { keyword = "bg" },
+    },
+  },
+
+  {
+    "mistweaverco/kulala.nvim",
+    ft = { "http", "rest" },
+    dependencies = { "nvim-lua/plenary.nvim" },
+    keys = {
+      { "<leader>Rs", function() require("kulala").run() end, desc = "Kulala: 发送选中/当前请求", mode = { "n", "v" } },
+      { "<leader>RA", function() require("kulala").run_all() end, desc = "Kulala: 发送文件中所有请求" },
+      { "<leader>Rr", function() require("kulala").replay() end, desc = "Kulala: 重放上一次请求" },
+      { "<leader>Ri", function() require("kulala").inspect() end, desc = "Kulala: 检查最近响应" },
+      { "<leader>Rc", function() require("kulala").copy() end, desc = "Kulala: 复制响应内容" },
+      { "<leader>RO", function() require("kulala").scratchpad() end, desc = "Kulala: 打开 Scratchpad" },
+      { "<leader>RE", function() require("kulala").set_selected_env() end, desc = "Kulala: 切换环境" },
+      { "<leader>RF", function() require("kulala").from_curl() end, desc = "Kulala: 粘贴 curl 并解析" },
+      { "<leader>RD", function() require("kulala").download_graphql_schema() end, desc = "Kulala: 下载 GraphQL schema" },
+      { "<leader>RK", function() require("kulala").search() end, desc = "Kulala: 请求列表" },
+    },
+    opts = {
+      global_keymaps = false,
+      global_keymaps_prefix = "<leader>R",
+      environment_scope = "b",
+      default_env = "dev",
+      infer_content_type = true,
+      write_cookies = true,
+      ui = {
+        display_mode = "split",
+        split_direction = "vertical",
+        default_view = "headers_body",
+        win_opts = { wo = { number = false, relativenumber = false } },
+        disable_news_popup = true,
+        winbar_labels_keymaps = false,
+        show_icons = "signcolumn",
+        icons = {
+          inlay = { loading = "󰑮", done = "󰄬", error = "󰅙" },
+          lualine = "󰓡",
+          loadingHighlight = "DiagnosticWarn",
+          doneHighlight = "DiagnosticInfo",
+          errorHighlight = "DiagnosticError",
+        },
+        default_winbar_panes = { "body", "headers", "script_output", "stats", "help" },
+        pickers = {
+          snacks = {
+            layout = function()
+              local ok, picker = pcall(require, "snacks.picker")
+              return not ok and {}
+                or vim.tbl_deep_extend("force", picker.config.layout("telescope"), {
+                  reverse = true,
+                })
+            end,
+          },
+        },
+      },
+      lsp = {
+        enable = true,
+        formatter = { indent = 2 },
+        keymaps = false,
+      },
     },
   },
 
@@ -235,6 +519,58 @@ return {
       float_opts = { border = "rounded" },
       shade_terminals = false,
     },
+  },
+
+  -- 快速包围操作
+  {
+    "kylechui/nvim-surround",
+    version = "*",
+    event = "VeryLazy",
+    config = true,
+  },
+
+  -- 项目级搜索替换
+  {
+    "nvim-pack/nvim-spectre",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    cmd = "Spectre",
+    keys = {
+      { "<leader>sr", function() require("spectre").open() end, desc = "Spectre 搜索/替换" },
+      { "<leader>sw", function() require("spectre").open_visual({ select_word = true }) end, desc = "Spectre 当前词", mode = "n" },
+      { "<leader>sw", function() require("spectre").open_visual() end, desc = "Spectre 选择文本", mode = "v" },
+      { "<leader>sp", function() require("spectre").open_file_search({ select_word = true }) end, desc = "Spectre 当前文件" },
+    },
+    opts = {
+      open_cmd = "vnew", -- 垂直窗口便于对照
+      live_update = true,
+      highlight = {
+        ui = "IncSearch",
+        search = "IncSearch",
+        replace = "DiffDelete",
+      },
+    },
+  },
+
+  -- 更智能的折叠体验（Treesitter + 缩进）
+  {
+    "kevinhwang91/nvim-ufo",
+    dependencies = { "kevinhwang91/promise-async" },
+    event = "BufReadPost",
+    keys = {
+      { "zR", function() require("ufo").openAllFolds() end, desc = "打开全部折叠" },
+      { "zM", function() require("ufo").closeAllFolds() end, desc = "收起全部折叠" },
+    },
+    opts = {
+      provider_selector = function()
+        return { "treesitter", "indent" }
+      end,
+    },
+    init = function()
+      vim.o.foldcolumn = "1"
+      vim.o.foldlevel = 99
+      vim.o.foldlevelstart = 99
+      vim.o.foldenable = true
+    end,
   },
 
   {
