@@ -1,30 +1,37 @@
--- 主题与基础配色（苹果系暗色、柔和圆角）
+-- 主题与基础配色（One Dark Pro）
 return {
   {
-    "catppuccin/nvim",
-    name = "catppuccin",
+    "olimorris/onedarkpro.nvim",
     lazy = false,
     priority = 1000,
     opts = {
-      flavour = "mocha",
-      transparent_background = false,
-      integrations = {
-        noice = true,
-        telescope = true,
+      options = {
+        transparency = false,
+        cursorline = true,
+        bold = true,
+      },
+      styles = {
+        comments = "italic",
+        keywords = "bold",
+        functions = "italic",
+      },
+      plugins = {
+        all = false,
+        nvim_lsp = true,
         treesitter = true,
-        cmp = true,
+        telescope = true,
         gitsigns = true,
-        markdown = true,
-        native_lsp = { enabled = true },
+        nvim_cmp = true,
       },
     },
     config = function(_, opts)
-      require("catppuccin").setup(opts)
-      vim.cmd.colorscheme("catppuccin-mocha")
+      local onedarkpro = require("onedarkpro")
+      onedarkpro.setup(opts)
+      vim.cmd.colorscheme("onedark_vivid")
     end,
   },
   {
     "LazyVim/LazyVim",
-    opts = { colorscheme = "catppuccin-mocha" },
+    opts = { colorscheme = "onedark_vivid" },
   },
 }

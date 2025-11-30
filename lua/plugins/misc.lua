@@ -23,6 +23,110 @@ return {
     end,
   },
 
+  -- Git 细粒度标记与操作
+  {
+    "lewis6991/gitsigns.nvim",
+    event = { "BufReadPre", "BufNewFile" },
+    opts = function(_, opts)
+      opts = opts or {}
+      opts.signs = vim.tbl_deep_extend("force", {
+        add = { text = "┃" },
+        change = { text = "┃" },
+        delete = { text = "▁" },
+        topdelete = { text = "▔" },
+        changedelete = { text = "┅" },
+        untracked = { text = "┆" },
+      }, opts.signs or {})
+      opts.signs_staged = vim.tbl_deep_extend("force", {
+        add = { text = "┃" },
+        change = { text = "┃" },
+        delete = { text = "▁" },
+        topdelete = { text = "▔" },
+        changedelete = { text = "┅" },
+        untracked = { text = "┆" },
+      }, opts.signs_staged or {})
+      opts.signs_staged_enable = true
+      opts.sign_priority = 8
+      opts.current_line_blame = true
+      opts.current_line_blame_opts = {
+        virt_text = true,
+        virt_text_pos = "eol",
+        delay = 400,
+        ignore_whitespace = true,
+      }
+      opts.preview_config = {
+        border = "rounded",
+        style = "minimal",
+        relative = "cursor",
+        row = 1,
+        col = 1,
+      }
+
+      local old_on_attach = opts.on_attach
+      opts.on_attach = function(bufnr)
+        if old_on_attach then
+          old_on_attach(bufnr)
+        end
+        local gs = require("gitsigns")
+        local function map(mode, lhs, rhs, desc)
+          vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, desc = desc })
+        end
+
+        -- Hunk 导航
+        map("n", "]h", function()
+          if vim.wo.diff then
+            vim.cmd.normal({ "]c", bang = true })
+          else
+            gs.nav_hunk("next")
+          end
+        end, "下一个 Git 变更")
+        map("n", "[h", function()
+          if vim.wo.diff then
+            vim.cmd.normal({ "[c", bang = true })
+          else
+            gs.nav_hunk("prev")
+          end
+        end, "上一个 Git 变更")
+
+        -- Hunk 操作
+        map("n", "<leader>gs", gs.stage_hunk, "暂存当前 Hunk")
+        map("v", "<leader>gs", function()
+          gs.stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
+        end, "暂存选中 Hunk")
+        map("n", "<leader>gu", gs.undo_stage_hunk, "撤销暂存 Hunk")
+        map("n", "<leader>gr", gs.reset_hunk, "重置当前 Hunk")
+        map("v", "<leader>gr", function()
+          gs.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
+        end, "重置选中 Hunk")
+        map("n", "<leader>gS", gs.stage_buffer, "暂存当前文件")
+        map("n", "<leader>gR", gs.reset_buffer, "重置当前文件")
+
+        -- 查看与比较
+        map("n", "<leader>gp", gs.preview_hunk, "预览当前 Hunk")
+        map("n", "<leader>gi", gs.preview_hunk_inline, "内联预览 Hunk")
+        map("n", "<leader>gb", function()
+          gs.blame_line({ full = true })
+        end, "查看完整 Blame")
+        map("n", "<leader>gd", gs.diffthis, "与索引对比")
+        map("n", "<leader>gD", function()
+          gs.diffthis("~")
+        end, "与上一次提交对比")
+
+        -- 切换与列表
+        map("n", "<leader>gl", gs.toggle_current_line_blame, "切换行内 Blame")
+        map("n", "<leader>gw", gs.toggle_word_diff, "切换字级 diff")
+        map("n", "<leader>gq", gs.setqflist, "当前文件变更列表")
+        map("n", "<leader>gQ", function()
+          gs.setqflist("all")
+        end, "工作区变更列表")
+
+        map({ "o", "x" }, "ih", gs.select_hunk, "选择 Git Hunk")
+      end
+
+      return opts
+    end,
+  },
+
   {
     "petertriho/nvim-scrollbar",
     event = "VeryLazy",
@@ -109,8 +213,8 @@ return {
         TODO = { icon = " ", color = "info" },
         HACK = { icon = " ", color = "warning" },
         WARN = { icon = " ", color = "warning" },
-        PERF = { icon = " ", color = "default" },
-        NOTE = { icon = " ", color = "hint" },
+        PERF = { icon = " ", color = "default" },
+        NOTE = { icon = "󰎞 ", color = "hint" },
       },
       highlight = { keyword = "bg" },
     },
