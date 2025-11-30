@@ -78,8 +78,15 @@ return {
 
   {
     "neovim/nvim-lspconfig",
-    opts = {
-      servers = {
+    opts = function(_, opts)
+      opts = opts or {}
+      opts.diagnostics = vim.tbl_deep_extend("force", opts.diagnostics or {}, {
+        virtual_text = { spacing = 2, source = "if_many" },
+        update_in_insert = false,
+        severity_sort = true,
+      })
+      opts.servers = opts.servers or {}
+      opts.servers = vim.tbl_deep_extend("force", opts.servers, {
         clangd = {
           cmd = { "clangd", "--header-insertion=never", "--offset-encoding=utf-16" },
         },
@@ -121,8 +128,9 @@ return {
         jsonls = {},
         yamlls = {},
         bashls = {},
-      },
-    },
+      })
+      return opts
+    end,
   },
 
   -- Git 细粒度标记与操作
@@ -316,7 +324,16 @@ return {
     "nvim-treesitter/nvim-treesitter",
     opts = function(_, opts)
       opts.ensure_installed = opts.ensure_installed or {}
-      opts.highlight = vim.tbl_deep_extend("force", opts.highlight or {}, { enable = true })
+      opts.highlight = vim.tbl_deep_extend("force", opts.highlight or {}, {
+        enable = true,
+        disable = function(_, buf)
+          local ok, line_count = pcall(vim.api.nvim_buf_line_count, buf)
+          if ok and line_count > 5000 then
+            return true
+          end
+          return false
+        end,
+      })
       vim.list_extend(opts.ensure_installed, {
         "bash",
         "html",
@@ -371,6 +388,15 @@ return {
       { "<leader>du", function() require("dapui").toggle() end, desc = "DAP UI 面板" },
       { "<leader>dk", function() require("dap").up() end, desc = "DAP 栈上移" },
       { "<leader>dj", function() require("dap").down() end, desc = "DAP 栈下移" },
+      {
+        "<leader>dx",
+        function()
+          local dap, dapui = require("dap"), require("dapui")
+          dap.terminate()
+          dapui.close()
+        end,
+        desc = "DAP 终止并关闭 UI",
+      },
     },
     config = function()
       local dap = require("dap")
@@ -513,12 +539,106 @@ return {
   {
     "akinsho/toggleterm.nvim",
     version = "*",
-    opts = {
-      open_mapping = [[<c-\>]],
-      direction = "float",
-      float_opts = { border = "rounded" },
-      shade_terminals = false,
-    },
+    cmd = { "ToggleTerm", "TermExec" },
+    keys = function()
+      local float_term
+      local vertical_term
+      local function project_root()
+        local git_root = vim.fn.systemlist("git rev-parse --show-toplevel")[1]
+        if git_root and git_root ~= "" then
+          return git_root
+        end
+        local bufdir = vim.fn.expand("%:p:h")
+        if bufdir and bufdir ~= "" then
+          return bufdir
+        end
+        return vim.loop.cwd()
+      end
+      local function preferred_cwd()
+        local ft = vim.bo.filetype
+        local use_root = {
+          go = true,
+          javascript = true,
+          typescript = true,
+          typescriptreact = true,
+          javascriptreact = true,
+          lua = true,
+          python = true,
+          rust = true,
+          c = true,
+          cpp = true,
+        }
+        if use_root[ft] then
+          return project_root()
+        end
+        return vim.loop.cwd()
+      end
+      local function toggle_float()
+        local Terminal = require("toggleterm.terminal").Terminal
+        if not float_term then
+          float_term = Terminal:new({ direction = "float", close_on_exit = false, cwd = preferred_cwd })
+        end
+        float_term:toggle()
+      end
+      local function toggle_vertical()
+        local Terminal = require("toggleterm.terminal").Terminal
+        if not vertical_term then
+          vertical_term = Terminal:new({ direction = "vertical", size = 80, close_on_exit = false, cwd = preferred_cwd })
+        end
+        vertical_term:toggle()
+      end
+      local function run_go_test()
+        local Terminal = require("toggleterm.terminal").Terminal
+        Terminal:new({ cmd = "go test ./...", direction = "float", close_on_exit = false, cwd = preferred_cwd() }):toggle()
+      end
+      local function run_node_test()
+        local Terminal = require("toggleterm.terminal").Terminal
+        Terminal:new({ cmd = "npm test", direction = "float", close_on_exit = false, cwd = preferred_cwd() }):toggle()
+      end
+      local function run_py_test()
+        local Terminal = require("toggleterm.terminal").Terminal
+        Terminal:new({ cmd = "pytest", direction = "float", close_on_exit = false, cwd = preferred_cwd() }):toggle()
+      end
+      return {
+        { "<leader>tt", toggle_float, desc = "切换浮动终端" },
+        { "<leader>tv", toggle_vertical, desc = "竖向终端" },
+        { "<leader>tg", run_go_test, desc = "Go: go test ./..." },
+        { "<leader>tn", run_node_test, desc = "Node: npm test" },
+        { "<leader>tp", run_py_test, desc = "Python: pytest" },
+      }
+    end,
+    opts = function()
+      local shell = vim.o.shell
+      local is_win = vim.loop.os_uname().sysname == "Windows_NT"
+      if is_win then
+        if vim.fn.executable("pwsh") == 1 then
+          shell = "pwsh"
+          vim.opt.shellcmdflag =
+            "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
+          vim.opt.shellquote = ""
+          vim.opt.shellxquote = ""
+        elseif vim.fn.executable("powershell") == 1 then
+          shell = "powershell"
+          vim.opt.shellcmdflag =
+            "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
+          vim.opt.shellquote = ""
+          vim.opt.shellxquote = ""
+        else
+          shell = "cmd.exe"
+        end
+        vim.opt.shell = shell
+      end
+
+      return {
+        open_mapping = [[<c-\>]],
+        direction = "float",
+        float_opts = { border = "rounded" },
+        shade_terminals = false,
+        start_in_insert = true,
+        close_on_exit = false, -- 保留输出，便于查看保存/编译信息
+        auto_scroll = true,
+      }
+    end,
   },
 
   -- 快速包围操作

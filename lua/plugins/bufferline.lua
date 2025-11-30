@@ -99,8 +99,8 @@ return {
       { "<A-c>", "<Cmd>BufferClose<CR>", desc = "Barbar: 关闭标签" },
       { "<A-S-c>", "<Cmd>BufferRestore<CR>", desc = "Barbar: 恢复关闭标签" },
       -- pick mode
-      { "<C-p>", "<Cmd>BufferPick<CR>", desc = "Barbar: 选择标签" },
-      { "<C-S-p>", "<Cmd>BufferPickDelete<CR>", desc = "Barbar: 选择并关闭" },
+      { "<leader>bs", "<Cmd>BufferPick<CR>", desc = "Barbar: 选择标签" },
+      { "<leader>bx", "<Cmd>BufferPickDelete<CR>", desc = "Barbar: 选择并关闭" },
       -- ordering
       { "<leader>bb", "<Cmd>BufferOrderByBufferNumber<CR>", desc = "Barbar: 根据序号排序" },
       { "<leader>bn", "<Cmd>BufferOrderByName<CR>", desc = "Barbar: 根据名称排序" },

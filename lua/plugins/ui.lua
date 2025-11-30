@@ -13,6 +13,7 @@ return {
       },
       views = {
         mini = { border = { style = "rounded" } },
+        notify = { border = { style = "rounded" }, merge = true },
         cmdline_popup = {
           border = { style = "rounded" },
           position = { row = "35%", col = "50%" },
@@ -26,9 +27,13 @@ return {
     "rcarriga/nvim-notify",
     opts = {
       render = "wrapped-compact",
-      stages = "fade",
+      stages = "fade_in_slide_out",
       timeout = 2500,
       top_down = false,
+      background_colour = "#1e1e2e",
+      on_open = function(win)
+        pcall(vim.api.nvim_win_set_config, win, { border = "rounded" })
+      end,
     },
     config = function(_, opts)
       local notify = require("notify")

@@ -30,6 +30,14 @@ map("n", "<leader>fg", "<cmd>Telescope live_grep<cr>", { desc = "全局搜索" }
 map("n", "<leader>fb", "<cmd>Telescope buffers<cr>", { desc = "切换缓冲区" })
 map("n", "<leader>fh", "<cmd>Telescope help_tags<cr>", { desc = "帮助文档" })
 
+-- 快速命令/搜索体验（终端无法捕获单独双击 Ctrl/Shift，改用顺手组合）
+map("n", "<leader>:", function()
+  vim.api.nvim_feedkeys(":", "n", false)
+end, { desc = "进入命令行" })
+map("n", "<C-p>", function()
+  vim.api.nvim_feedkeys(":", "n", false)
+end, { desc = "进入命令行（保留 Ctrl+p）" })
+
 -- LSP/诊断快捷方式
 map("n", "<leader>sd", function()
   vim.diagnostic.open_float(nil, { focus = false, border = "rounded" })
@@ -45,6 +53,7 @@ end, { desc = "格式化当前缓冲区" })
 map("n", "<leader>la", vim.lsp.buf.code_action, { desc = "代码操作" })
 map("n", "<leader>lr", vim.lsp.buf.rename, { desc = "重命名符号" })
 map("n", "<leader>ld", "<cmd>Telescope diagnostics<cr>", { desc = "诊断列表" })
+map("n", "<leader>uh", "<cmd>NoiceHistory<cr>", { desc = "查看通知历史" })
 
 -- 系统剪贴板友好：视觉模式 Ctrl+C 复制，Ctrl+V 粘贴
 map({ "n", "v" }, "<C-c>", '"+y', { desc = "复制到系统剪贴板" })
@@ -52,6 +61,14 @@ map({ "n", "v" }, "<C-v>", '"+p', { desc = "从系统剪贴板粘贴" })
 map({ "n", "v" }, "<C-S-v>", '"+p', { desc = "从系统剪贴板粘贴" })
 map({ "n", "v" }, "<C-x>", '"+d', { desc = "剪切到系统剪贴板" })
 
+-- 插入模式快速返回 Normal
+map("i", "jk", "<Esc>", { desc = "插入模式退出" })
+map("i", "kj", "<Esc>", { desc = "插入模式退出" })
+
 -- 终端模式粘贴（退到 Normal 再粘贴）
 map("t", "<C-v>", [[<C-\><C-n>"+pi]], { desc = "终端粘贴系统剪贴板" })
 map("t", "<C-S-v>", [[<C-\><C-n>"+pi]], { desc = "终端粘贴系统剪贴板" })
+
+-- 终端模式快速返回 Normal
+map("t", "<Esc>", [[<C-\><C-n>]], { desc = "终端退出到 Normal" })
+map("t", "jk", [[<C-\><C-n>]], { desc = "终端退出到 Normal" })
