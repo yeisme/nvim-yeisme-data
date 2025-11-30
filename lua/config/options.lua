@@ -30,3 +30,26 @@ opt.mouse = "a" -- 开启鼠标支持
 -- 性能细节
 opt.updatetime = 300 -- 减少延迟
 opt.timeoutlen = 400 -- 快捷键超时更灵敏
+
+-- 默认终端：按平台和可用性选择
+local function pick_shell()
+  if vim.fn.has("win32") == 1 then
+    if vim.fn.executable("pwsh") == 1 then
+      return "pwsh"
+    elseif vim.fn.executable("powershell") == 1 then
+      return "powershell"
+    end
+    return "cmd"
+  else
+    if vim.fn.executable("zsh") == 1 then
+      return "zsh"
+    elseif vim.fn.executable("bash") == 1 then
+      return "bash"
+    end
+  end
+end
+
+local preferred_shell = pick_shell()
+if preferred_shell then
+  opt.shell = preferred_shell
+end

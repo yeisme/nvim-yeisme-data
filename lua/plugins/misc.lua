@@ -29,8 +29,19 @@ return {
     opts = {
       show = true,
       set_highlights = false,
-      -- 禁用 hlslens 搜索 handler，避免缺少模块的提示
-      handlers = { diagnostic = true, search = false },
+      -- 结合 hlslens 提供搜索位置指示
+      handlers = { diagnostic = true, search = true },
+    },
+  },
+
+  -- 搜索结果高亮增强，配合 scrollbar 展示匹配位置
+  {
+    "kevinhwang91/nvim-hlslens",
+    event = "VeryLazy",
+    opts = {
+      calm_down = true,
+      nearest_only = true,
+      nearest_float_when = "never",
     },
   },
 
@@ -39,8 +50,11 @@ return {
     main = "ibl",
     event = "VeryLazy",
     opts = {
-      indent = { char = "│", highlight = "NonText" },
+      indent = { char = "|", highlight = "NonText" },
       scope = { enabled = false },
+      exclude = {
+        filetypes = { "alpha", "dashboard", "lazy", "neo-tree", "mason" },
+      },
     },
   },
 
@@ -100,6 +114,12 @@ return {
       },
       highlight = { keyword = "bg" },
     },
+  },
+
+  -- Fzf backend used by TodoFzfLua and other pickers
+  {
+    "ibhagwan/fzf-lua",
+    cmd = "FzfLua",
   },
 
   {

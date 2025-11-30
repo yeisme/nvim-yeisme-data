@@ -10,8 +10,10 @@ return {
         mode = "buffers",
         separator_style = "thin", -- 规则分隔，无圆角
         diagnostics = false, -- 关闭 LSP 诊断标记，减少频繁刷新带来的开销
-        show_buffer_close_icons = false,
-        show_close_icon = false,
+        show_buffer_close_icons = false, -- 不显示标签关闭按钮
+        show_close_icon = false, -- 关闭全局关闭按钮
+        close_command = nil,
+        hover = nil,
         -- 不显示 Neo-tree 左侧标题
         offsets = { { filetype = "neo-tree", text = nil, highlight = "Directory", separator = true } },
         indicator = { style = "underline" },
