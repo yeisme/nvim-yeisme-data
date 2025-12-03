@@ -29,24 +29,11 @@ return {
     opts = function(_, opts)
       opts = opts or {}
       opts.ensure_installed = opts.ensure_installed or {}
+      -- Go/Python/TS/Rust 相关的 LSP/格式化/调试均交给 LazyVim extras 自动安装，这里只保留通用与 C/C++
       vim.list_extend(opts.ensure_installed, {
         -- C/C++
         "clangd",
         "clang-format",
-        -- Go
-        "gopls",
-        "golangci-lint",
-        "gofumpt",
-        -- Python
-        "pyright",
-        "ruff",
-        "ruff-lsp",
-        -- Node/JS/TS
-        "typescript-language-server",
-        "eslint_d",
-        "prettier",
-        -- Rust
-        "rust-analyzer",
         -- Common
         "json-lsp",
         "yaml-language-server",
@@ -61,13 +48,9 @@ return {
     opts = function(_, opts)
       opts = opts or {}
       opts.ensure_installed = opts.ensure_installed or {}
+      -- 语言专用 LSP 交由 LazyVim extras 维护，避免重复 ensure_installed
       vim.list_extend(opts.ensure_installed, {
         "clangd",
-        "gopls",
-        "pyright",
-        "ruff_lsp",
-        "tsserver",
-        "rust_analyzer",
         "jsonls",
         "yamlls",
         "bashls",
@@ -479,181 +462,6 @@ return {
     },
   },
 
-  {
-    "mistweaverco/kulala.nvim",
-    ft = { "http", "rest" },
-    dependencies = { "nvim-lua/plenary.nvim" },
-    keys = {
-      { "<leader>Rs", function() require("kulala").run() end, desc = "Kulala: 发送选中/当前请求", mode = { "n", "v" } },
-      { "<leader>RA", function() require("kulala").run_all() end, desc = "Kulala: 发送文件中所有请求" },
-      { "<leader>Rr", function() require("kulala").replay() end, desc = "Kulala: 重放上一次请求" },
-      { "<leader>Ri", function() require("kulala").inspect() end, desc = "Kulala: 检查最近响应" },
-      { "<leader>Rc", function() require("kulala").copy() end, desc = "Kulala: 复制响应内容" },
-      { "<leader>RO", function() require("kulala").scratchpad() end, desc = "Kulala: 打开 Scratchpad" },
-      { "<leader>RE", function() require("kulala").set_selected_env() end, desc = "Kulala: 切换环境" },
-      { "<leader>RF", function() require("kulala").from_curl() end, desc = "Kulala: 粘贴 curl 并解析" },
-      { "<leader>RD", function() require("kulala").download_graphql_schema() end, desc = "Kulala: 下载 GraphQL schema" },
-      { "<leader>RK", function() require("kulala").search() end, desc = "Kulala: 请求列表" },
-    },
-    opts = {
-      global_keymaps = false,
-      global_keymaps_prefix = "<leader>R",
-      environment_scope = "b",
-      default_env = "dev",
-      infer_content_type = true,
-      write_cookies = true,
-      ui = {
-        display_mode = "split",
-        split_direction = "vertical",
-        default_view = "headers_body",
-        win_opts = { wo = { number = false, relativenumber = false } },
-        disable_news_popup = true,
-        winbar_labels_keymaps = false,
-        show_icons = "signcolumn",
-        icons = {
-          inlay = { loading = "󰑮", done = "󰄬", error = "󰅙" },
-          lualine = "󰓡",
-          loadingHighlight = "DiagnosticWarn",
-          doneHighlight = "DiagnosticInfo",
-          errorHighlight = "DiagnosticError",
-        },
-        default_winbar_panes = { "body", "headers", "script_output", "stats", "help" },
-        pickers = {
-          snacks = {
-            layout = function()
-              local ok, picker = pcall(require, "snacks.picker")
-              return not ok and {}
-                or vim.tbl_deep_extend("force", picker.config.layout("telescope"), {
-                  reverse = true,
-                })
-            end,
-          },
-        },
-      },
-      lsp = {
-        enable = true,
-        formatter = { indent = 2 },
-        keymaps = false,
-      },
-    },
-  },
-
-  -- Fzf backend used by TodoFzfLua and other pickers
-  {
-    "ibhagwan/fzf-lua",
-    cmd = "FzfLua",
-  },
-
-  {
-    "akinsho/toggleterm.nvim",
-    version = "*",
-    cmd = { "ToggleTerm", "TermExec" },
-    keys = function()
-      local float_term
-      local vertical_term
-      local function project_root()
-        local git_root = vim.fn.systemlist("git rev-parse --show-toplevel")[1]
-        if git_root and git_root ~= "" then
-          return git_root
-        end
-        local bufdir = vim.fn.expand("%:p:h")
-        if bufdir and bufdir ~= "" then
-          return bufdir
-        end
-        return vim.loop.cwd()
-      end
-      local function preferred_cwd()
-        local ft = vim.bo.filetype
-        local use_root = {
-          go = true,
-          javascript = true,
-          typescript = true,
-          typescriptreact = true,
-          javascriptreact = true,
-          lua = true,
-          python = true,
-          rust = true,
-          c = true,
-          cpp = true,
-        }
-        if use_root[ft] then
-          return project_root()
-        end
-        return vim.loop.cwd()
-      end
-      local function toggle_float()
-        local Terminal = require("toggleterm.terminal").Terminal
-        if not float_term then
-          ---@diagnostic disable-next-line:missing-fields
-          float_term = Terminal:new({ direction = "float", close_on_exit = false, cwd = preferred_cwd })
-        end
-        float_term:toggle()
-      end
-      local function toggle_vertical()
-        local Terminal = require("toggleterm.terminal").Terminal
-        if not vertical_term then
-          ---@diagnostic disable-next-line:missing-fields
-          vertical_term = Terminal:new({ direction = "vertical", size = 80, close_on_exit = false, cwd = preferred_cwd })
-        end
-        vertical_term:toggle()
-      end
-      local function run_go_test()
-        local Terminal = require("toggleterm.terminal").Terminal
-        ---@diagnostic disable-next-line:missing-fields
-        Terminal:new({ cmd = "go test ./...", direction = "float", close_on_exit = false, cwd = preferred_cwd() }):toggle()
-      end
-      local function run_node_test()
-        local Terminal = require("toggleterm.terminal").Terminal
-        ---@diagnostic disable-next-line:missing-fields
-        Terminal:new({ cmd = "npm test", direction = "float", close_on_exit = false, cwd = preferred_cwd() }):toggle()
-      end
-      local function run_py_test()
-        local Terminal = require("toggleterm.terminal").Terminal
-        ---@diagnostic disable-next-line:missing-fields
-        Terminal:new({ cmd = "pytest", direction = "float", close_on_exit = false, cwd = preferred_cwd() }):toggle()
-      end
-      return {
-        { "<leader>tt", toggle_float, desc = "切换浮动终端" },
-        { "<leader>tv", toggle_vertical, desc = "竖向终端" },
-        { "<leader>tg", run_go_test, desc = "Go: go test ./..." },
-        { "<leader>tn", run_node_test, desc = "Node: npm test" },
-        { "<leader>tp", run_py_test, desc = "Python: pytest" },
-      }
-    end,
-    opts = function()
-      local shell = vim.o.shell
-      local uv = vim.uv or vim.loop
-      local is_win = uv.os_uname().sysname == "Windows_NT"
-      if is_win then
-        if vim.fn.executable("pwsh") == 1 then
-          shell = "pwsh"
-          vim.opt.shellcmdflag =
-            "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
-          vim.opt.shellquote = ""
-          vim.opt.shellxquote = ""
-        elseif vim.fn.executable("powershell") == 1 then
-          shell = "powershell"
-          vim.opt.shellcmdflag =
-            "-NoLogo -NoProfile -ExecutionPolicy RemoteSigned -Command [Console]::InputEncoding=[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
-          vim.opt.shellquote = ""
-          vim.opt.shellxquote = ""
-        else
-          shell = "cmd.exe"
-        end
-        vim.opt.shell = shell
-      end
-
-      return {
-        open_mapping = [[<c-\>]],
-        direction = "float",
-        float_opts = { border = "rounded" },
-        shade_terminals = false,
-        start_in_insert = true,
-        close_on_exit = false, -- 保留输出，便于查看保存/编译信息
-        auto_scroll = true,
-      }
-    end,
-  },
 
   -- 快速包围操作
   {

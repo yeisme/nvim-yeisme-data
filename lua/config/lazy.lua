@@ -18,6 +18,15 @@ require("lazy").setup({
   spec = {
     -- add LazyVim and import its plugins
     { "LazyVim/LazyVim", import = "lazyvim.plugins" },
+    -- 官方 extras：语言/工具由 LazyVim 维护，减少自定义重复
+    { import = "lazyvim.plugins.extras.lang.go" },
+    { import = "lazyvim.plugins.extras.lang.python" },
+    { import = "lazyvim.plugins.extras.lang.typescript" },
+    { import = "lazyvim.plugins.extras.lang.rust" },
+    { import = "lazyvim.plugins.extras.lang.clangd" }, -- 包含 clangd_extensions
+    { import = "lazyvim.plugins.extras.util.gh" }, -- gh.nvim 官方配置
+    { import = "lazyvim.plugins.extras.editor.fzf" }, -- fzf-lua 官方配置
+    { import = "lazyvim.plugins.extras.util.rest" }, -- Kulala 官方配置
     -- import/override with your plugins
     { import = "plugins" },
   },
