@@ -30,12 +30,21 @@ return {
       stages = "fade_in_slide_out",
       timeout = 2500,
       top_down = false,
-      background_colour = "#1e1e2e",
+      background_colour = "#0f111a",
       on_open = function(win)
         pcall(vim.api.nvim_win_set_config, win, { border = "rounded" })
       end,
     },
     config = function(_, opts)
+      local function normal_bg()
+        local ok, hl = pcall(vim.api.nvim_get_hl, 0, { name = "Normal", link = false })
+        if ok and hl and hl.bg then
+          return string.format("#%06x", hl.bg)
+        end
+        return opts.background_colour or "#0f111a"
+      end
+
+      opts.background_colour = normal_bg()
       local notify = require("notify")
       notify.setup(opts)
       vim.notify = notify

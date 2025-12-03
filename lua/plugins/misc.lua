@@ -203,7 +203,7 @@ return {
         map("v", "<leader>gs", function()
           gs.stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
         end, "暂存选中 Hunk")
-        map("n", "<leader>gu", gs.undo_stage_hunk, "撤销暂存 Hunk")
+        map("n", "<leader>gu", gs.stage_hunk, "切换暂存状态 Hunk")
         map("n", "<leader>gr", gs.reset_hunk, "重置当前 Hunk")
         map("v", "<leader>gr", function()
           gs.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
@@ -230,7 +230,7 @@ return {
         map("n", "<leader>gw", gs.toggle_word_diff, "切换字级 diff")
         map("n", "<leader>gq", gs.setqflist, "当前文件变更列表")
         map("n", "<leader>gQ", function()
-          gs.setqflist("all")
+          gs.setqflist({ all = true })
         end, "工作区变更列表")
 
         map({ "o", "x" }, "ih", gs.select_hunk, "选择 Git Hunk")
@@ -263,7 +263,7 @@ return {
         win_config = { width = 36 },
       },
       hooks = {
-        diff_buf_read = function(bufnr)
+        diff_buf_read = function(_)
           vim.opt_local.wrap = false
           vim.opt_local.list = false
         end,
@@ -365,42 +365,46 @@ return {
       "jay-babu/mason-nvim-dap.nvim",
       "nvim-neotest/nvim-nio",
     },
-    keys = {
-      { "<F5>", function() require("dap").continue() end, desc = "DAP 继续/启动" },
-      { "<F6>", function() require("dap").terminate() end, desc = "DAP 结束调试" },
-      { "<F10>", function() require("dap").step_over() end, desc = "DAP Step Over" },
-      { "<F11>", function() require("dap").step_into() end, desc = "DAP Step Into" },
-      { "<F12>", function() require("dap").step_out() end, desc = "DAP Step Out" },
-      { "<leader>db", function() require("dap").toggle_breakpoint() end, desc = "DAP 切换断点" },
-      {
-        "<leader>dB",
-        function()
-          require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
-        end,
-        desc = "DAP 条件断点",
-      },
-      {
-        "<leader>dl",
-        function()
-          require("dap").set_breakpoint(nil, nil, vim.fn.input("Log point message: "))
-        end,
-        desc = "DAP 日志点",
-      },
-      { "<leader>dr", function() require("dap").restart() end, desc = "DAP 重启" },
-      { "<leader>de", function() require("dap").run_last() end, desc = "DAP 重跑上次配置" },
-      { "<leader>du", function() require("dapui").toggle() end, desc = "DAP UI 面板" },
-      { "<leader>dk", function() require("dap").up() end, desc = "DAP 栈上移" },
-      { "<leader>dj", function() require("dap").down() end, desc = "DAP 栈下移" },
-      {
-        "<leader>dx",
-        function()
-          local dap, dapui = require("dap"), require("dapui")
-          dap.terminate()
-          dapui.close()
-        end,
-        desc = "DAP 终止并关闭 UI",
-      },
-    },
+    keys = function()
+      local step_into_key = vim.g.neovide and "<F8>" or "<F11>"
+      return {
+        { "<F5>", function() require("dap").continue() end, desc = "DAP ����/����" },
+        { "<F6>", function() require("dap").terminate() end, desc = "DAP ��������" },
+        { "<F10>", function() require("dap").step_over() end, desc = "DAP Step Over" },
+        { step_into_key, function() require("dap").step_into() end, desc = "DAP Step Into" },
+        { "<F12>", function() require("dap").step_out() end, desc = "DAP Step Out" },
+        { "<leader>db", function() require("dap").toggle_breakpoint() end, desc = "DAP �л��ϵ�" },
+        {
+          "<leader>dB",
+          function()
+            require("dap").set_breakpoint(vim.fn.input("Breakpoint condition: "))
+          end,
+          desc = "DAP �����ϵ�",
+        },
+        {
+          "<leader>dl",
+          function()
+            require("dap").set_breakpoint(nil, nil, vim.fn.input("Log point message: "))
+          end,
+          desc = "DAP ��־��",
+        },
+        { "<leader>dr", function() require("dap").restart() end, desc = "DAP ����" },
+        { "<leader>de", function() require("dap").run_last() end, desc = "DAP �����ϴ�����" },
+        { "<leader>du", function() require("dapui").toggle() end, desc = "DAP UI ���" },
+        { "<leader>dk", function() require("dap").up() end, desc = "DAP ջ����" },
+        { "<leader>dj", function() require("dap").down() end, desc = "DAP ջ����" },
+        {
+          "<leader>dx",
+          function()
+            local dap, dapui = require("dap"), require("dapui")
+            dap.terminate()
+            dapui.close()
+          end,
+          desc = "DAP ��ֹ���ر� UI",
+        },
+      }
+    end,
+
     config = function()
       local dap = require("dap")
       local dapui = require("dapui")
@@ -418,6 +422,7 @@ return {
         highlight_changed_variables = true,
       })
 
+      ---@diagnostic disable-next-line:missing-fields
       dapui.setup({
         icons = { expanded = "▾", collapsed = "▸", current_frame = "▸" },
         layouts = {
@@ -579,6 +584,7 @@ return {
       local function toggle_float()
         local Terminal = require("toggleterm.terminal").Terminal
         if not float_term then
+          ---@diagnostic disable-next-line:missing-fields
           float_term = Terminal:new({ direction = "float", close_on_exit = false, cwd = preferred_cwd })
         end
         float_term:toggle()
@@ -586,20 +592,24 @@ return {
       local function toggle_vertical()
         local Terminal = require("toggleterm.terminal").Terminal
         if not vertical_term then
+          ---@diagnostic disable-next-line:missing-fields
           vertical_term = Terminal:new({ direction = "vertical", size = 80, close_on_exit = false, cwd = preferred_cwd })
         end
         vertical_term:toggle()
       end
       local function run_go_test()
         local Terminal = require("toggleterm.terminal").Terminal
+        ---@diagnostic disable-next-line:missing-fields
         Terminal:new({ cmd = "go test ./...", direction = "float", close_on_exit = false, cwd = preferred_cwd() }):toggle()
       end
       local function run_node_test()
         local Terminal = require("toggleterm.terminal").Terminal
+        ---@diagnostic disable-next-line:missing-fields
         Terminal:new({ cmd = "npm test", direction = "float", close_on_exit = false, cwd = preferred_cwd() }):toggle()
       end
       local function run_py_test()
         local Terminal = require("toggleterm.terminal").Terminal
+        ---@diagnostic disable-next-line:missing-fields
         Terminal:new({ cmd = "pytest", direction = "float", close_on_exit = false, cwd = preferred_cwd() }):toggle()
       end
       return {
@@ -612,7 +622,8 @@ return {
     end,
     opts = function()
       local shell = vim.o.shell
-      local is_win = vim.loop.os_uname().sysname == "Windows_NT"
+      local uv = vim.uv or vim.loop
+      local is_win = uv.os_uname().sysname == "Windows_NT"
       if is_win then
         if vim.fn.executable("pwsh") == 1 then
           shell = "pwsh"
@@ -699,12 +710,14 @@ return {
   {
     "hrsh7th/nvim-cmp",
     dependencies = { "hrsh7th/cmp-emoji" },
-    ---@param opts cmp.ConfigSchema
     opts = function(_, opts)
       local cmp = require("cmp")
+      opts = opts or {}
       opts.mapping = opts.mapping or {}
       opts.mapping["<C-y>"] = cmp.mapping.confirm({ select = true })
+      opts.sources = opts.sources or {}
       table.insert(opts.sources, { name = "emoji" })
+      return opts
     end,
   },
 }

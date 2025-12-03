@@ -47,10 +47,7 @@ end, { desc = "查看当前诊断" })
 map("n", "[d", vim.diagnostic.goto_prev, { desc = "上一个诊断" })
 map("n", "]d", vim.diagnostic.goto_next, { desc = "下一个诊断" })
 map("n", "<leader>cf", function()
-  local ok = pcall(vim.lsp.buf.format, { async = true })
-  if not ok and vim.lsp.buf.formatting then
-    vim.lsp.buf.formatting()
-  end
+  pcall(vim.lsp.buf.format, { async = true })
 end, { desc = "格式化当前缓冲区" })
 map("n", "<leader>la", vim.lsp.buf.code_action, { desc = "代码操作" })
 map("n", "<leader>lr", vim.lsp.buf.rename, { desc = "重命名符号" })
