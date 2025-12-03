@@ -224,6 +224,9 @@ return {
 
         -- 切换与列表
         map("n", "<leader>gl", gs.toggle_current_line_blame, "切换行内 Blame")
+        map("n", "<leader>gB", function()
+          gs.blame_line({ full = true })
+        end, "查看 Blame 详情")
         map("n", "<leader>gw", gs.toggle_word_diff, "切换字级 diff")
         map("n", "<leader>gq", gs.setqflist, "当前文件变更列表")
         map("n", "<leader>gQ", function()

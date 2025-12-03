@@ -84,6 +84,7 @@ return {
                 hidden = true,
                 no_ignore = true,
                 default_text = prompt,
+                cwd = vim.fn.expand("%:p:h"),
               })
             end,
           },

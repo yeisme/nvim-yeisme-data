@@ -22,6 +22,8 @@ map("n", "<A-Up>", "<cmd>resize +2<cr>", { desc = "增加高度" })
 map("n", "<A-Down>", "<cmd>resize -2<cr>", { desc = "减少高度" })
 map("n", "<A-Left>", "<cmd>vertical resize -4<cr>", { desc = "减少宽度" })
 map("n", "<A-Right>", "<cmd>vertical resize +4<cr>", { desc = "增加宽度" })
+map("n", "<C-A-Left>", "<cmd>vertical resize -4<cr>", { desc = "减少宽度 (Ctrl+Alt)" })
+map("n", "<C-A-Right>", "<cmd>vertical resize +4<cr>", { desc = "增加宽度 (Ctrl+Alt)" })
 map("n", "<leader>w=", "<C-w>=", { desc = "平分窗口大小" })
 
 -- Telescope 常用入口

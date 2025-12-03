@@ -1,4 +1,4 @@
--- 底部状态栏：矩形规则样式（取消圆角）
+-- 底部状态栏：圆角分段样式
 return {
   {
     "nvim-lualine/lualine.nvim",
@@ -45,14 +45,20 @@ return {
       local block = function(component, color)
         component.padding = { left = 2, right = 2 }
         component.color = color
+        if not component.cond and (component == lsp_names or component == formatters) then
+          component.cond = function()
+            return component() ~= ""
+          end
+        end
+        component.component_separators = { left = "", right = "" }
         return component
       end
 
       opts.options = vim.tbl_deep_extend("force", opts.options or {}, {
         theme = "onedark",
         globalstatus = true,
-        component_separators = { left = "│", right = "│" },
-        section_separators = { left = "", right = "" },
+        component_separators = { left = "", right = "" },
+        section_separators = { left = "", right = "" },
       })
 
       opts.sections = {
@@ -69,8 +75,8 @@ return {
             path = 1,
             symbols = { modified = " ⌘", readonly = " " },
           }, {}),
-          block({ lsp_names, cond = function() return lsp_names() ~= "" end }, { fg = get_color("DiagnosticInfo", "#8aadf4") }),
-          block({ formatters, cond = function() return formatters() ~= "" end }, { fg = get_color("DiagnosticHint", "#7dc4e4") }),
+          block({ lsp_names, cond = function() return lsp_names() ~= "" end }, { fg = get_color("DiagnosticInfo", "#8aadf4"), bg = "#2d3142" }),
+          block({ formatters, cond = function() return formatters() ~= "" end }, { fg = get_color("DiagnosticHint", "#7dc4e4"), bg = "#1f2a3f" }),
         },
         lualine_x = {
           block({
@@ -89,14 +95,16 @@ return {
       }
 
       opts.inactive_sections = {
-        lualine_a = {
-          block({ "filename", path = 1 }, {}),
-        },
+        lualine_a = { block({ "filename", path = 1 }, {}) },
         lualine_b = {},
         lualine_c = {},
         lualine_x = {},
-        lualine_y = {},
-        lualine_z = {},
+        lualine_y = {
+          block({ function() return (vim.bo.fileencoding or "utf-8") .. "/" .. (vim.bo.fileformat or "lf") end }, {}),
+        },
+        lualine_z = {
+          block({ "location" }, {}),
+        },
       }
 
       return opts
