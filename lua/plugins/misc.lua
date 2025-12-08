@@ -23,101 +23,29 @@ return {
     end,
   },
 
-  -- LSP/工具链安装
+  -- Mason：仅添加 LazyVim extras 未覆盖的工具
   {
     "mason-org/mason.nvim",
     opts = function(_, opts)
-      opts = opts or {}
       opts.ensure_installed = opts.ensure_installed or {}
-      -- Go/Python/TS/Rust 相关的 LSP/格式化/调试均交给 LazyVim extras 自动安装，这里只保留通用与 C/C++
       vim.list_extend(opts.ensure_installed, {
-        -- C/C++
-        "clangd",
-        "clang-format",
-        -- Common
-        "json-lsp",
-        "yaml-language-server",
-        "bash-language-server",
-        -- Lua 开发
-        "lua-language-server",
-        "stylua",
+        "bash-language-server", -- shell 脚本
+        "stylua", -- Lua 格式化
       })
       return opts
     end,
   },
 
-  {
-    "mason-org/mason-lspconfig.nvim",
-    opts = function(_, opts)
-      opts = opts or {}
-      opts.ensure_installed = opts.ensure_installed or {}
-      -- 语言专用 LSP 交由 LazyVim extras 维护，避免重复 ensure_installed
-      vim.list_extend(opts.ensure_installed, {
-        "clangd",
-        "jsonls",
-        "yamlls",
-        "bashls",
-        "lua_ls",
-      })
-      return opts
-    end,
-  },
-
+  -- LSP 配置：仅覆盖需要自定义的服务器设置
   {
     "neovim/nvim-lspconfig",
-    opts = function(_, opts)
-      opts = opts or {}
-      opts.diagnostics = vim.tbl_deep_extend("force", opts.diagnostics or {}, {
-        virtual_text = { spacing = 2, source = "if_many" },
-        update_in_insert = false,
-        severity_sort = true,
-      })
-      opts.servers = opts.servers or {}
-      opts.servers = vim.tbl_deep_extend("force", opts.servers, {
+    opts = {
+      servers = {
         clangd = {
           cmd = { "clangd", "--header-insertion=never", "--offset-encoding=utf-16" },
         },
-        gopls = {
-          settings = {
-            gopls = {
-              gofumpt = true,
-              usePlaceholders = true,
-              analyses = { unusedparams = true, fieldalignment = true },
-              staticcheck = true,
-            },
-          },
-        },
-        pyright = {
-          settings = {
-            python = {
-              analysis = {
-                typeCheckingMode = "basic",
-                autoImportCompletions = true,
-              },
-            },
-          },
-        },
-        ruff_lsp = {},
-        tsserver = {
-          settings = {
-            javascript = { inlayHints = { includeInlayParameterNameHints = "all" } },
-            typescript = { inlayHints = { includeInlayParameterNameHints = "all" } },
-          },
-        },
-        rust_analyzer = {
-          settings = {
-            ["rust-analyzer"] = {
-              checkOnSave = { command = "clippy" },
-              cargo = { allFeatures = true },
-            },
-          },
-        },
-        jsonls = {},
-        yamlls = {},
-        bashls = {},
-      })
-      return opts
-    end,
+      },
+    },
   },
 
   -- Git 细粒度标记与操作
@@ -288,29 +216,13 @@ return {
       indent = { char = "|", highlight = "NonText" },
       scope = { enabled = false },
       exclude = {
-        filetypes = { "alpha", "dashboard", "lazy", "neo-tree", "mason" },
+        filetypes = { "alpha", "dashboard", "lazy", "snacks_picker_list", "mason" },
       },
     },
   },
 
-  {
-    "nvim-neo-tree/neo-tree.nvim",
-    opts = function(_, opts)
-      opts.window = opts.window or {}
-      opts.window.width = 32
-      opts.default_component_configs = opts.default_component_configs or {}
-      opts.default_component_configs.indent =
-        vim.tbl_deep_extend("force", opts.default_component_configs.indent or {}, {
-          indent_size = 2,
-          padding = 1,
-        })
-      opts.default_component_configs.git_status =
-        vim.tbl_deep_extend("force", opts.default_component_configs.git_status or {}, {
-          symbols = { added = "＋", modified = "∙", deleted = "－", renamed = "↺" },
-        })
-      return opts
-    end,
-  },
+  -- 禁用 neo-tree，使用 snacks.explorer
+  { "nvim-neo-tree/neo-tree.nvim", enabled = false },
 
   {
     "nvim-treesitter/nvim-treesitter",
@@ -529,6 +441,46 @@ return {
   },
 
   {
+    "folke/persistence.nvim",
+    event = "BufReadPre",
+    opts = {
+      dir = vim.fn.stdpath("state") .. "/sessions/",
+      need = 1,
+      branch = true,
+    },
+    keys = {
+      {
+        "<leader>qs",
+        function()
+          require("persistence").load()
+        end,
+        desc = "会话：当前目录",
+      },
+      {
+        "<leader>qS",
+        function()
+          require("persistence").select()
+        end,
+        desc = "会话：选择",
+      },
+      {
+        "<leader>ql",
+        function()
+          require("persistence").load({ last = true })
+        end,
+        desc = "会话：上次",
+      },
+      {
+        "<leader>qd",
+        function()
+          require("persistence").stop()
+        end,
+        desc = "会话：停止保存",
+      },
+    },
+  },
+
+  {
     "folke/todo-comments.nvim",
     event = "VeryLazy",
     dependencies = { "nvim-lua/plenary.nvim" },
@@ -646,6 +598,30 @@ return {
       opts.sources = opts.sources or {}
       table.insert(opts.sources, { name = "emoji" })
       return opts
+    end,
+  },
+
+  -- VSCode 风格：Ctrl + ` 打开/切换终端
+  {
+    "LazyVim/LazyVim",
+    keys = function(_, keys)
+      local function toggle_terminal_root()
+        local ok, Snacks = pcall(require, "snacks")
+        if ok and Snacks.terminal then
+          Snacks.terminal(nil, { cwd = LazyVim.root() })
+        else
+          -- 回退：在底部分屏开启内置终端
+          vim.cmd("belowright split | resize 12 | terminal")
+        end
+      end
+
+      table.insert(keys, {
+        "<C-`>",
+        toggle_terminal_root,
+        mode = { "n", "t" },
+        desc = "终端（Ctrl+`，根目录）",
+      })
+      return keys
     end,
   },
 }

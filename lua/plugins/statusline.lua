@@ -63,7 +63,12 @@ return {
 
       opts.sections = {
         lualine_a = {
-          block({ "mode", fmt = function(str) return str:sub(1, 1) end }, {}),
+          block({
+            "mode",
+            fmt = function(str)
+              return str:sub(1, 1)
+            end,
+          }, {}),
         },
         lualine_b = {
           block({ "branch" }, {}),
@@ -75,8 +80,18 @@ return {
             path = 1,
             symbols = { modified = " ⌘", readonly = " " },
           }, {}),
-          block({ lsp_names, cond = function() return lsp_names() ~= "" end }, { fg = get_color("DiagnosticInfo", "#8aadf4"), bg = "#2d3142" }),
-          block({ formatters, cond = function() return formatters() ~= "" end }, { fg = get_color("DiagnosticHint", "#7dc4e4"), bg = "#1f2a3f" }),
+          block({
+            lsp_names,
+            cond = function()
+              return lsp_names() ~= ""
+            end,
+          }, { fg = get_color("DiagnosticInfo", "#8aadf4"), bg = "#2d3142" }),
+          block({
+            formatters,
+            cond = function()
+              return formatters() ~= ""
+            end,
+          }, { fg = get_color("DiagnosticHint", "#7dc4e4"), bg = "#1f2a3f" }),
         },
         lualine_x = {
           block({
@@ -86,7 +101,11 @@ return {
           block({ "filetype", icon_only = false }, {}),
         },
         lualine_y = {
-          block({ function() return (vim.bo.fileencoding or "utf-8") .. "/" .. (vim.bo.fileformat or "lf") end }, {}),
+          block({
+            function()
+              return (vim.bo.fileencoding or "utf-8") .. "/" .. (vim.bo.fileformat or "lf")
+            end,
+          }, {}),
           block({ "progress" }, {}),
         },
         lualine_z = {
@@ -100,7 +119,11 @@ return {
         lualine_c = {},
         lualine_x = {},
         lualine_y = {
-          block({ function() return (vim.bo.fileencoding or "utf-8") .. "/" .. (vim.bo.fileformat or "lf") end }, {}),
+          block({
+            function()
+              return (vim.bo.fileencoding or "utf-8") .. "/" .. (vim.bo.fileformat or "lf")
+            end,
+          }, {}),
         },
         lualine_z = {
           block({ "location" }, {}),

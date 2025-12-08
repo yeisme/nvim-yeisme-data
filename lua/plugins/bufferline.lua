@@ -36,7 +36,7 @@ return {
         tabpages = true,
         insert_at_end = true,
         sidebar_filetypes = {
-          ["neo-tree"] = { text = "文件树", event = "BufWinLeave" },
+          snacks_picker_list = { text = "文件树", event = "BufWinLeave" },
           Outline = { event = "BufWinLeave" },
         },
         icons = {
