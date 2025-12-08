@@ -38,6 +38,9 @@ return {
         "json-lsp",
         "yaml-language-server",
         "bash-language-server",
+        -- Lua 开发
+        "lua-language-server",
+        "stylua",
       })
       return opts
     end,
@@ -54,6 +57,7 @@ return {
         "jsonls",
         "yamlls",
         "bashls",
+        "lua_ls",
       })
       return opts
     end,
@@ -295,13 +299,15 @@ return {
       opts.window = opts.window or {}
       opts.window.width = 32
       opts.default_component_configs = opts.default_component_configs or {}
-      opts.default_component_configs.indent = vim.tbl_deep_extend("force", opts.default_component_configs.indent or {}, {
-        indent_size = 2,
-        padding = 1,
-      })
-      opts.default_component_configs.git_status = vim.tbl_deep_extend("force", opts.default_component_configs.git_status or {}, {
-        symbols = { added = "＋", modified = "∙", deleted = "－", renamed = "↺" },
-      })
+      opts.default_component_configs.indent =
+        vim.tbl_deep_extend("force", opts.default_component_configs.indent or {}, {
+          indent_size = 2,
+          padding = 1,
+        })
+      opts.default_component_configs.git_status =
+        vim.tbl_deep_extend("force", opts.default_component_configs.git_status or {}, {
+          symbols = { added = "＋", modified = "∙", deleted = "－", renamed = "↺" },
+        })
       return opts
     end,
   },
@@ -339,6 +345,17 @@ return {
     end,
   },
 
+  -- Lua 开发体验：lazydev 提供 runtime/type 提示
+  {
+    "folke/lazydev.nvim",
+    ft = "lua",
+    opts = {
+      library = {
+        { path = "luvit-meta/library", words = { "vim%.uv" } },
+      },
+    },
+  },
+
   -- DAP 调试体验
   {
     "mfussenegger/nvim-dap",
@@ -351,12 +368,48 @@ return {
     keys = function()
       local step_into_key = vim.g.neovide and "<F8>" or "<F11>"
       return {
-        { "<F5>", function() require("dap").continue() end, desc = "DAP ����/����" },
-        { "<F6>", function() require("dap").terminate() end, desc = "DAP ��������" },
-        { "<F10>", function() require("dap").step_over() end, desc = "DAP Step Over" },
-        { step_into_key, function() require("dap").step_into() end, desc = "DAP Step Into" },
-        { "<F12>", function() require("dap").step_out() end, desc = "DAP Step Out" },
-        { "<leader>db", function() require("dap").toggle_breakpoint() end, desc = "DAP �л��ϵ�" },
+        {
+          "<F5>",
+          function()
+            require("dap").continue()
+          end,
+          desc = "DAP ����/����",
+        },
+        {
+          "<F6>",
+          function()
+            require("dap").terminate()
+          end,
+          desc = "DAP ��������",
+        },
+        {
+          "<F10>",
+          function()
+            require("dap").step_over()
+          end,
+          desc = "DAP Step Over",
+        },
+        {
+          step_into_key,
+          function()
+            require("dap").step_into()
+          end,
+          desc = "DAP Step Into",
+        },
+        {
+          "<F12>",
+          function()
+            require("dap").step_out()
+          end,
+          desc = "DAP Step Out",
+        },
+        {
+          "<leader>db",
+          function()
+            require("dap").toggle_breakpoint()
+          end,
+          desc = "DAP �л��ϵ�",
+        },
         {
           "<leader>dB",
           function()
@@ -371,11 +424,41 @@ return {
           end,
           desc = "DAP ��־��",
         },
-        { "<leader>dr", function() require("dap").restart() end, desc = "DAP ����" },
-        { "<leader>de", function() require("dap").run_last() end, desc = "DAP �����ϴ�����" },
-        { "<leader>du", function() require("dapui").toggle() end, desc = "DAP UI ���" },
-        { "<leader>dk", function() require("dap").up() end, desc = "DAP ջ����" },
-        { "<leader>dj", function() require("dap").down() end, desc = "DAP ջ����" },
+        {
+          "<leader>dr",
+          function()
+            require("dap").restart()
+          end,
+          desc = "DAP ����",
+        },
+        {
+          "<leader>de",
+          function()
+            require("dap").run_last()
+          end,
+          desc = "DAP �����ϴ�����",
+        },
+        {
+          "<leader>du",
+          function()
+            require("dapui").toggle()
+          end,
+          desc = "DAP UI ���",
+        },
+        {
+          "<leader>dk",
+          function()
+            require("dap").up()
+          end,
+          desc = "DAP ջ����",
+        },
+        {
+          "<leader>dj",
+          function()
+            require("dap").down()
+          end,
+          desc = "DAP ջ����",
+        },
         {
           "<leader>dx",
           function()
@@ -462,7 +545,6 @@ return {
     },
   },
 
-
   -- 快速包围操作
   {
     "kylechui/nvim-surround",
@@ -477,10 +559,36 @@ return {
     dependencies = { "nvim-lua/plenary.nvim" },
     cmd = "Spectre",
     keys = {
-      { "<leader>sr", function() require("spectre").open() end, desc = "Spectre 搜索/替换" },
-      { "<leader>sw", function() require("spectre").open_visual({ select_word = true }) end, desc = "Spectre 当前词", mode = "n" },
-      { "<leader>sw", function() require("spectre").open_visual() end, desc = "Spectre 选择文本", mode = "v" },
-      { "<leader>sp", function() require("spectre").open_file_search({ select_word = true }) end, desc = "Spectre 当前文件" },
+      {
+        "<leader>sr",
+        function()
+          require("spectre").open()
+        end,
+        desc = "Spectre 搜索/替换",
+      },
+      {
+        "<leader>sw",
+        function()
+          require("spectre").open_visual({ select_word = true })
+        end,
+        desc = "Spectre 当前词",
+        mode = "n",
+      },
+      {
+        "<leader>sw",
+        function()
+          require("spectre").open_visual()
+        end,
+        desc = "Spectre 选择文本",
+        mode = "v",
+      },
+      {
+        "<leader>sp",
+        function()
+          require("spectre").open_file_search({ select_word = true })
+        end,
+        desc = "Spectre 当前文件",
+      },
     },
     opts = {
       open_cmd = "vnew", -- 垂直窗口便于对照
@@ -499,8 +607,20 @@ return {
     dependencies = { "kevinhwang91/promise-async" },
     event = "BufReadPost",
     keys = {
-      { "zR", function() require("ufo").openAllFolds() end, desc = "打开全部折叠" },
-      { "zM", function() require("ufo").closeAllFolds() end, desc = "收起全部折叠" },
+      {
+        "zR",
+        function()
+          require("ufo").openAllFolds()
+        end,
+        desc = "打开全部折叠",
+      },
+      {
+        "zM",
+        function()
+          require("ufo").closeAllFolds()
+        end,
+        desc = "收起全部折叠",
+      },
     },
     opts = {
       provider_selector = function()
